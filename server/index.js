@@ -206,10 +206,21 @@ app.get('/api/asn/:year/:cc', (req, res) => {
     if (!cc || !year) {
         res.sendStatus(404);
     }
-    db.selectWithCondition('data', `cc='${cc}' AND year(date)='${year}' AND type='asn'`).then(result => {
-        // console.log(result);
-        queryRes = result[0];
-        obj = { 'Economy': cc, 'Resource': 'ASN', 'Year': year, ...queryRes };
+    db.getSumWithCountryAndYear('data', cc, year).then(result => {
+        let obj = {};
+        // check if single country or all contry
+        if (cc === 'ALL') {
+            // console.log(result);
+            obj = result.map(i => {
+                return { ...i, 'Resource': 'ASN', 'Year': year };
+            })
+        } else {
+            queryRes = result[0];
+            if (!queryRes['Total']) {
+                res.status(404).send(`There is no result with country ${cc} and year ${year}!`);
+            }
+            obj = { 'Economy': cc, 'Resource': 'ASN', 'Year': year, ...queryRes };
+        }
         res.send(obj);
     }).catch(err => {
         res.send(err);

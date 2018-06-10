@@ -85,9 +85,15 @@ module.exports = {
     //     });
     // },
 
-    selectWithCondition: (tableName, condition) => {
+    getSumWithCountryAndYear: (tableName, country, year) => {
+        let queryString = `SELECT SUM(value) as Total FROM ${tableName} 
+        WHERE cc='${country}' AND year(date)='${year}' AND type='asn'`;
+        if (country === 'ALL') {
+            queryString = `SELECT SUM(value) as Total, cc as Economy FROM ${tableName} 
+            WHERE year(date)='${year}' AND type='asn' GROUP BY cc`;
+        }
         return new Promise((res, rej) => {
-            var query = db.query(`SELECT SUM(value) as Total FROM ${tableName} WHERE ${condition}`, function (err, result) {
+            var query = db.query(queryString, function (err, result) {
                 if (err) {
                     rej(err);
                 };
