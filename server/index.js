@@ -9,6 +9,7 @@ var ftp = new PromiseFtp();
 
 // middleware
 app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
     const now = new Date().toString();
     const log = `${now}: ${req.method} | ${req.url}`;
     console.log(log);
@@ -36,48 +37,11 @@ db.checkDataExist('data').then((res) => {
 }).catch(err => {
     console.error(err);
 })
-// db.deleteAll('data').then(() => {
-//     lineReader.eachLine('datafile_s', function (line, last) {
-//         if (!line) {
-//             return;
-//         }
-//         // ignore comment line
-//         if (line[0] === '#') {
-//             commented = true;
-//             return;
-//         }
-//         // ignore the file header for now
-//         if (commented) {
-//             commented = false;
-//             return;
-//         }
-//         arr = line.split('|');
-//         // ignore summary data
-//         if (arr[arr.length - 1] === 'summary') {
-//             return;
-//         }
 
-//         // conver the array to an object
-//         obj = parseArrayToObject(arr);
-
-//         // insert data to db
-//         db.insert('data', obj);
-//         numOfRecord++;
-//         // console.log(line);
-
-//         if (last) {
-//             console.log(`finished reading, ${numOfRecord} inserted`);
-//             return false; // stop reading
-//         }
-//     });
-// }).catch(err => {
-//     throw err;
-// });
-
-
+// var countDeleteMe = 0;
 function importData() {
     db.deleteAll('data').then(() => {
-        lineReader.eachLine('datafile', (line, last) => {
+        lineReader.eachLine('file.local-copy', (line, last) => {
             if (!line) {
                 return;
             }
@@ -109,7 +73,7 @@ function importData() {
                     console.log(`finished reading, ${numOfRecord} inserted`);
                     return false; // stop reading
                 }
-            }).catch(err => { throw err });
+            }).catch(err => { console.error(err) });
         });
     }).catch(err => {
         console.error(err);
@@ -149,7 +113,7 @@ function parseArrayToObject(arr) {
                 obj['extensions'] = i;
                 break;
             default:
-                throw 'invalid record';
+                console.error('invalid record');
         }
     });
     return obj;
@@ -167,12 +131,13 @@ function parseArrayToObject(arr) {
 // // connect to localhost:21 as anonymous
 // c.connect({ host: 'ftp.apnic.net' });
 
-//try download the file 
-// const host = 'ftp.apnic.net';
+// try download the file 
+//ftp://ftp.apnic.net/public/apnic/stats/apnic/delegated-apnic-latest
+const host = 'ftp.apnic.net';
 // ftp.connect({ host: host })
 //     .then(function (serverMessage) {
 //         console.log("hello");
-//         return ftp.get('/stats/apnic/delegated-apnic-extended-latest');
+//         return ftp.get('/public/apnic/stats/apnic/delegated-apnic-latest');
 //     }).then(function (stream) {
 //         return new Promise(function (resolve, reject) {
 //             stream.once('close', resolve);
@@ -218,15 +183,32 @@ app.get('/api/asn/:year/:cc', (req, res) => {
             queryRes = result[0];
             if (!queryRes['Total']) {
                 res.status(404).send(`There is no result with country ${cc} and year ${year}!`);
+                return;
             }
             obj = { 'Economy': cc, 'Resource': 'ASN', 'Year': year, ...queryRes };
         }
         res.send(obj);
     }).catch(err => {
+        console.error(err);
         res.send(err);
     })
 });
 
+app.get('/api/years', (req, res) => {
+    db.selectDistinct('data', 'year(date)').then(result => {
+        res.send(result);
+    }).catch(err => {
+        res.send(err);
+    })
+});
+
+app.get('/api/countries', (req, res) => {
+    db.selectDistinct('data', 'cc').then(result => {
+        res.send(result);
+    }).catch(err => {
+        res.send(err);
+    })
+});
 // // create a new quality file
 // app.post('/qualityFile/:key/:name', (req, res) => {
 //     // const key = req.param('key');

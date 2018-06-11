@@ -1,0 +1,36 @@
+<div class="container">
+  <div class="control-wrapper">
+    <div class="country-control">
+      <label for="country">Country code:</label>
+      <select id="country" [(ngModel)]="selectedCountry">
+        <option value="ALL">ALL</option>
+        <option *ngFor="let c of countryList" [value]="c">{{c}}</option>
+      </select>
+    </div>
+    <div class="year-control">
+      <label for="year">Year:</label>
+      <select id="year" [(ngModel)]="selectedYear">
+        <option *ngFor="let y of yearList" [value]="y">{{y}}</option>
+      </select>
+    </div>
+    <button (click)="fetchData()">Show</button>
+  </div>
+
+  <div class="chart-wrapper">
+    <h4>ASN total for {{displayCountry}} in {{displayYear}}</h4>
+    <div class="chart-container">
+      <ngx-charts-bar-vertical
+        [results]="data"
+        [legend]="true"
+        legendTitle="Country"
+        [xAxis]="true"
+        [yAxis]="true"
+        [showYAxisLabel]="true"
+        yAxisLabel="Count (Unique Numbers)"
+        [barPadding]="padding"
+        [yScaleMax]="yScaleMax"
+      >
+      </ngx-charts-bar-vertical>
+    </div>
+  </div>
+</div>
