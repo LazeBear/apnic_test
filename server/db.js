@@ -4,7 +4,7 @@ let db = null;
 module.exports = {
     connect: () => {
         db = mysql.createConnection({
-            host: 'localhost',
+            host: 'db',
             user: 'apnic',
             password: 'apnic',
             database: 'apnic'
@@ -76,74 +76,17 @@ module.exports = {
             });
             // console.log(query.sql);
         });
+    },
+
+    deleteAll: (tableName) => {
+        return new Promise((res, rej) => {
+            db.query(`DELETE FROM ${tableName}`, function (err, result) {
+                if (err) {
+                    rej(err);
+                };
+                // console.log(result);
+                res(result);
+            });
+        });
     }
-
-    // update: (tableName, obj, key) => {
-    //     return new Promise((res, rej) => {
-    //         if (db == null) {
-    //             throw 'db is null';
-    //         }
-    //         var query = db.query(`UPDATE ${tableName} SET ? WHERE ${key}`, obj, function (err, result) {
-    //             if (err) throw err;
-    //             console.log("1 record updated");
-    //             res();
-    //         });
-    //         console.log(query.sql);
-    //     });
-    // },
-
-    // selectAll: (tableName) => {
-    //     return new Promise((res, rej) => {
-
-    //         db.query(`SELECT * FROM ${tableName}`, function (err, result, fields) {
-    //             if (err) {
-    //                 rej(err);
-    //             };
-    //             res(result);
-    //         });
-    //     });
-    // },
-
-    // selectOne: (tableName, key) => {
-    //     return new Promise((res, rej) => {
-    //         db.query(`SELECT * FROM ${tableName} WHERE ID='${key}'`, function (err, result, fields) {
-    //             if (err) {
-    //                 rej(err);
-    //             };
-    //             res(result);
-    //         });
-    //     });
-    // },
-
-    // delete: (tableName, key) => {
-    //     db.query(`DELETE FROM ${tableName} WHERE ID='${key}'`, function (err, result) {
-    //         if (err) {
-    //             throw err;
-    //         };
-    //     });
-    // },
-
-    // deleteAll: (tableName) => {
-    //     return new Promise((res, rej) => {
-    //         db.query(`DELETE FROM ${tableName}`, function (err, result) {
-    //             if (err) {
-    //                 rej(err);
-    //             };
-    //             console.log(result);
-    //             res(result);
-    //         });
-    //     });
-    // },
-
-    // customQuery: (query) => {
-    //     return new Promise((res, rej) => {
-    //         db.query(query, function (err, result, fields) {
-    //             if (err) {
-    //                 rej(err);
-    //             };
-    //             res(result);
-    //         });
-    //     });
-    // },
-
 }

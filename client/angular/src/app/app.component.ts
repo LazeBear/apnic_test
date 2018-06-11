@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {AppService} from './app.service';
+import {ToastrService} from 'ngx-toastr';
 
 @Component({
   selector: 'app-root',
@@ -19,13 +20,15 @@ export class AppComponent implements OnInit {
   yearList: Array<string>;
   countryList: Array<string>;
 
-  constructor(private service: AppService) {
+  constructor(private service: AppService, private toastr: ToastrService) {
 
   }
 
   ngOnInit(): void {
     this.selectedCountry = 'CN';
     this.selectedYear = 2016;
+    this.displayYear = 0;
+    this.displayCountry = 'Country';
     this.padding = 8; // default value
     this.screenWidth = window.screen.width;
     this.yScaleMax = 100;
@@ -51,6 +54,8 @@ export class AppComponent implements OnInit {
         this.displayCountry = name;
         this.data = [{name, value: res['Total']}];
       }
+    }, err => {
+      this.showError(err);
     });
   }
 
@@ -68,5 +73,9 @@ export class AppComponent implements OnInit {
         return Object.keys(i).map((key) => i[key])[0];
       });
     });
+  }
+
+  showError(error) {
+    this.toastr.error(error.error, error.status);
   }
 }

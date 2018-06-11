@@ -1,11 +1,22 @@
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 const PromiseFtp = require('promise-ftp');
 const db = require('./db');
+const lineReader = require('line-reader');
+
+const app = express();
+const ftp = new PromiseFtp();
+
+let processingData = false;
+
 db.connect();
 
-var app = express();
-var ftp = new PromiseFtp();
+// host the angular file
+app.use(express.static(path.join(__dirname, '/public')));
+app.get('/graph', function (req, res) {
+    res.sendFile(path.join(__dirname + '/public/index.html'));
+});
 
 // middleware
 app.use((req, res, next) => {
@@ -19,27 +30,32 @@ app.use((req, res, next) => {
             console.log('Unable to append to server.log');
         }
     });
-    next();
+
+    if (processingData) {
+        console.log('reject request, data processing');
+        res.status(404).send('Server is processing data, please wait a couple minutes and try again!');
+    } else {
+        next();
+    }
 });
 
-
-var lineReader = require('line-reader');
-var commented = false;
-var numOfRecord = 0;
 // db.deleteAll('data');
-// importData();
+// check if the data already exist in the database
 db.checkDataExist('data').then((res) => {
     if (res) {
         console.log("data has already been imported");
     } else {
-        importData();
+        downloadFile();
     }
 }).catch(err => {
     console.error(err);
 })
 
-// var countDeleteMe = 0;
+
 function importData() {
+    var commented = false;
+    var numOfRecord = 0;
+    console.log('importing data to database');
     db.deleteAll('data').then(() => {
         lineReader.eachLine('file.local-copy', (line, last) => {
             if (!line) {
@@ -71,6 +87,7 @@ function importData() {
 
                 if (last) {
                     console.log(`finished reading, ${numOfRecord} inserted`);
+                    processingData = false;
                     return false; // stop reading
                 }
             }).catch(err => { console.error(err) });
@@ -80,6 +97,26 @@ function importData() {
     })
 }
 
+function downloadFile() {
+    //ftp://ftp.apnic.net/public/apnic/stats/apnic/delegated-apnic-latest
+    const host = 'ftp.apnic.net';
+    processingData = true;
+    ftp.connect({ host: host })
+        .then(function (serverMessage) {
+            console.log("downloading file");
+            return ftp.get('/public/apnic/stats/apnic/delegated-apnic-latest');
+        }).then(function (stream) {
+            return new Promise(function (resolve, reject) {
+                stream.once('close', resolve);
+                stream.once('error', reject);
+                stream.pipe(fs.createWriteStream('file.local-copy'));
+            });
+        }).then(function () {
+            console.log("download finished");
+            ftp.end();
+            importData();
+        });
+}
 
 function parseArrayToObject(arr) {
     let obj = {};
@@ -118,52 +155,6 @@ function parseArrayToObject(arr) {
     });
     return obj;
 }
-// var Client = require('ftp');
-
-// var c = new Client();
-// c.on('ready', function () {
-//     c.get('foo.txt', function (err, stream) {
-//         if (err) throw err;
-//         stream.once('close', function () { c.end(); });
-//         stream.pipe(fs.createWriteStream('foo.local-copy.txt'));
-//     });
-// });
-// // connect to localhost:21 as anonymous
-// c.connect({ host: 'ftp.apnic.net' });
-
-// try download the file 
-//ftp://ftp.apnic.net/public/apnic/stats/apnic/delegated-apnic-latest
-const host = 'ftp.apnic.net';
-// ftp.connect({ host: host })
-//     .then(function (serverMessage) {
-//         console.log("hello");
-//         return ftp.get('/public/apnic/stats/apnic/delegated-apnic-latest');
-//     }).then(function (stream) {
-//         return new Promise(function (resolve, reject) {
-//             stream.once('close', resolve);
-//             stream.once('error', reject);
-//             stream.pipe(fs.createWriteStream('file.local-copy'));
-//         });
-//     }).then(function () {
-//         return ftp.end();
-//     });
-
-
-// controllers
-// app.get('/api/asn/2016/:cc', (req, res) => {
-//     const cc = req.params.cc;
-//     if (!cc) {
-//         res.sendStatus(404);
-//     }
-//     db.selectWithCondition('data', `cc='${cc}' AND year(date)='2016'`).then(result => {
-//         // console.log(result);
-//         queryRes = result[0];
-//         obj = { 'Economy': cc, 'Resource': 'ASN', 'Year': 2016, ...queryRes };
-//         res.send(obj);
-//     }).catch(err => {
-//         res.send(err);
-//     })
-// });
 
 app.get('/api/asn/:year/:cc', (req, res) => {
     const cc = req.params.cc;
@@ -209,26 +200,5 @@ app.get('/api/countries', (req, res) => {
         res.send(err);
     })
 });
-// // create a new quality file
-// app.post('/qualityFile/:key/:name', (req, res) => {
-//     // const key = req.param('key');
-//     const key = environment.test.qualityFileKey;
-//     const name = req.params.name;
-//     request.post(`/qualityprofiles/copy?fromKey=${key}&toName=${name}`, res);
-// })
-
-// // delete a quality file
-// app.delete('/qualityFile/:key', (req, res) => {
-//     const key = req.params.key;
-//     request.deleteQF(`/qualityprofiles/delete?profile=${key}`).then((response) => {
-//         res.send(JSON.parse(response.body));
-//     }).catch((err) => {
-//         if (err.body === undefined) {
-//             res.sendStatus(200);
-//         } else {
-//             res.send(err.body);
-//         }
-//     })
-// })
 
 app.listen(4201);

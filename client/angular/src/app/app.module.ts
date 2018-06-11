@@ -7,6 +7,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {AppService} from './app.service';
 import {HttpClientModule} from '@angular/common/http';
 import {FormsModule} from '@angular/forms';
+import {ToastrModule} from 'ngx-toastr';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,11 @@ import {FormsModule} from '@angular/forms';
     HttpClientModule,
     BrowserAnimationsModule,
     BarChartModule,
-    FormsModule
+    FormsModule,
+    ToastrModule.forRoot({
+      positionClass: 'toast-bottom-right',
+      progressBar: true
+    }), // ToastrModule added
   ],
   providers: [AppService],
   bootstrap: [AppComponent]
