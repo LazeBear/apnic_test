@@ -82,11 +82,12 @@ function importData() {
 
             // insert data to db
             db.insert('data', obj).then(() => {
-                numOfRecord++;
-                // console.log(line);
+                if (numOfRecord++ % 1000 === 0) {
+                    console.log('importing progress: ' + numOfRecord);
+                }
 
                 if (last) {
-                    console.log(`finished reading, ${numOfRecord} inserted`);
+                    console.log(`importing finished, ${numOfRecord} inserted`);
                     processingData = false;
                     return false; // stop reading
                 }

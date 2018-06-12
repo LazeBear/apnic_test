@@ -25,7 +25,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.selectedCountry = 'CN';
+    this.selectedCountry = 'ALL';
     this.selectedYear = 2016;
     this.displayYear = 0;
     this.displayCountry = 'Country';
@@ -57,6 +57,16 @@ export class AppComponent implements OnInit {
     }, err => {
       this.showError(err);
     });
+  }
+
+  onCountryChange(newCountry) {
+    this.selectedCountry = newCountry;
+    this.fetchData();
+  }
+
+  onYearChange(newYear) {
+    this.selectedYear = newYear;
+    this.fetchData();
   }
 
   fetchCountryList(): any {

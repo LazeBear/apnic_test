@@ -4,7 +4,7 @@ let db = null;
 module.exports = {
     connect: () => {
         db = mysql.createConnection({
-            host: 'db',
+            host: 'localhost',
             user: 'apnic',
             password: 'apnic',
             database: 'apnic'

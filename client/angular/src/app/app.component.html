@@ -2,18 +2,17 @@
   <div class="control-wrapper">
     <div class="country-control">
       <label for="country">Country code:</label>
-      <select id="country" [(ngModel)]="selectedCountry">
+      <select id="country" [ngModel]="selectedCountry" (ngModelChange)="onCountryChange($event)">
         <option value="ALL">ALL</option>
         <option *ngFor="let c of countryList" [value]="c">{{c}}</option>
       </select>
     </div>
     <div class="year-control">
       <label for="year">Year:</label>
-      <select id="year" [(ngModel)]="selectedYear">
+      <select id="year" [ngModel]="selectedYear" (ngModelChange)="onYearChange($event)">
         <option *ngFor="let y of yearList" [value]="y">{{y}}</option>
       </select>
     </div>
-    <button (click)="fetchData()">Show</button>
   </div>
 
   <div class="chart-wrapper">
