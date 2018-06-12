@@ -51,13 +51,14 @@ app.use((req, res, next) => {
 connectDB();
 
 function connectDB() {
-    db.connect().then(() => {
+    db.communicate().then(() => {
         console.log('db connected');
         dbConnected = true;
         checkDataExist();
     }).catch(err => {
         // retry in 10s
-        setTimeout(connectDB(), 10000);
+        console.log('db connect failed, retry in 10 seconds');
+        setTimeout(() => connectDB(), 10000);
     });
 }
 

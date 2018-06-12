@@ -2,7 +2,7 @@ const mysql = require('mysql');
 let db = null;
 
 module.exports = {
-    connect: () => {
+    communicate: () => {
         return new Promise((res, rej) => {
             db = mysql.createConnection({
                 host: 'db',
