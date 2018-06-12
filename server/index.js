@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 
 
 // db.deleteAll('data');
-
+connectDB();
 
 function connectDB() {
     db.connect().then(() => {
