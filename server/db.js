@@ -3,16 +3,18 @@ let db = null;
 
 module.exports = {
     connect: () => {
-        db = mysql.createConnection({
-            host: 'db',
-            user: 'apnic',
-            password: 'apnic',
-            database: 'apnic'
-        });
-        console.log('db inited');
-        db.connect((err) => {
-            if (err) throw err;
-            console.log('db connected');
+        return new Promise((res, rej) => {
+            db = mysql.createConnection({
+                host: 'db',
+                user: 'apnic',
+                password: 'apnic',
+                database: 'apnic'
+            });
+            console.log('waiting for db connection ...');
+            db.connect((err) => {
+                if (err) rej(err);
+                res();
+            });
         });
     },
 

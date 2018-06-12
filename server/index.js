@@ -9,8 +9,7 @@ const app = express();
 const ftp = new PromiseFtp();
 
 let processingData = false;
-
-db.connect();
+let dbConnected = false;
 
 // host the angular file
 app.use(express.static(path.join(__dirname, '/public')));
@@ -31,6 +30,11 @@ app.use((req, res, next) => {
         }
     });
 
+    if (!dbConnected) {
+        res.status(404).send('Waiting for database connection!');
+        return;
+    }
+
     if (processingData) {
         console.log('reject request, data processing');
         res.status(404).send('Server is processing data, please wait a couple minutes and try again!');
@@ -39,18 +43,36 @@ app.use((req, res, next) => {
     }
 });
 
-// db.deleteAll('data');
-// check if the data already exist in the database
-db.checkDataExist('data').then((res) => {
-    if (res) {
-        console.log("data has already been imported");
-    } else {
-        downloadFile();
-    }
-}).catch(err => {
-    console.error(err);
-})
 
+
+
+
+// db.deleteAll('data');
+
+
+function connectDB() {
+    db.connect().then(() => {
+        console.log('db connected');
+        dbConnected = true;
+        checkDataExist();
+    }).catch(err => {
+        // retry in 10s
+        setTimeout(connectDB(), 10000);
+    });
+}
+
+function checkDataExist() {
+    // check if the data already exist in the database
+    db.checkDataExist('data').then((res) => {
+        if (res) {
+            console.log("data has already been imported");
+        } else {
+            downloadFile();
+        }
+    }).catch(err => {
+        console.error(err);
+    })
+}
 
 function importData() {
     var commented = false;
